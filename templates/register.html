@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Connect Shiksha Quiz App{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0 rounded-lg mt-5">
+                <div class="card-header text-center bg-primary text-white py-3">
+                    <h3 class="my-0">Create Account</h3>
+                    <p class="mb-0">Join Connect Shiksha Quiz App</p>
+                </div>
+                <div class="card-body p-4">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form method="POST" action="{{ url_for('register') }}" class="needs-validation" novalidate>
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                            </div>
+                            <div class="invalid-feedback">
+                                Please choose a username.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email address</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                            <div class="invalid-feedback">
+                                Please provide a valid email address.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback">
+                                Please provide a password.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">Confirm Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback">
+                                Please confirm your password.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="terms" required>
+                            <label class="form-check-label" for="terms">
+                                I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Terms and Conditions</a>
+                            </label>
+                            <div class="invalid-feedback">
+                                You must agree before submitting.
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-user-plus me-2"></i>Register
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <p class="mb-0">Already have an account? <a href="{{ url_for('login') }}" class="text-primary">Login here</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Terms and Conditions Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Terms and Conditions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. Account Registration</h6>
+                <p>You must provide accurate and complete information when creating an account.</p>
+                
+                <h6>2. Quiz Participation</h6>
+                <p>You agree to participate in quizzes honestly and not use any unfair means.</p>
+                
+                <h6>3. Privacy</h6>
+                <p>We respect your privacy and protect your personal information.</p>
+                
+                <h6>4. Content Usage</h6>
+                <p>All quiz content is protected by copyright and may not be reproduced.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Form validation
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+        }, false)
+    })
+})()
+
+// Password visibility toggle
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const button = input.nextElementSibling;
+    const icon = button.querySelector('i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+// Password match validation
+document.getElementById('confirm_password').addEventListener('input', function() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = this.value;
+    
+    if (password !== confirmPassword) {
+        this.setCustomValidity('Passwords do not match');
+    } else {
+        this.setCustomValidity('');
+    }
+});
+</script>
+{% endblock %} 

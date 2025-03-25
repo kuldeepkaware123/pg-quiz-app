@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Quiz - {{ quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Edit Quiz: {{ quiz.title }}</h5>
+            </div>
+            <div class="card-body">
+                <form id="editQuizForm">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Quiz Title</label>
+                        <input type="text" class="form-control" id="title" name="title" value="{{ quiz.title }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="duration" class="form-label">Duration (minutes)</label>
+                        <input type="number" class="form-control" id="duration" name="duration" value="{{ quiz.duration }}" required min="1">
+                    </div>
+
+                    <div class="questions-container">
+                        <h6 class="mb-3">Questions</h6>
+                        {% for question in quiz.questions %}
+                        <div class="question-card mb-4 p-3 border rounded">
+                            <div class="mb-3">
+                                <label class="form-label">Question {{ loop.index }}</label>
+                                <input type="text" class="form-control question-text" value="{{ question.question }}" required>
+                            </div>
+                            
+                            <div class="options-container">
+                                {% for option in question.options %}
+                                <div class="option-row mb-2">
+                                    <div class="input-group">
+                                        <div class="input-group-text">
+                                            <input type="radio" name="correct_{{ loop.index0 }}" value="{{ loop.index0 }}" 
+                                                   {% if option == question.correct_answer %}checked{% endif %}>
+                                        </div>
+                                        <input type="text" class="form-control option-text" value="{{ option }}" required>
+                                        <button type="button" class="btn btn-danger remove-option">Remove</button>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <button type="button" class="btn btn-secondary btn-sm add-option">
+                                <i class="fas fa-plus"></i> Add Option
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary me-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('editQuizForm');
+    
+    // Add option button functionality
+    document.querySelectorAll('.add-option').forEach(button => {
+        button.addEventListener('click', function() {
+            const questionCard = this.closest('.question-card');
+            const optionsContainer = questionCard.querySelector('.options-container');
+            const optionCount = optionsContainer.children.length;
+            
+            const newOption = document.createElement('div');
+            newOption.className = 'option-row mb-2';
+            newOption.innerHTML = `
+                <div class="input-group">
+                    <div class="input-group-text">
+                        <input type="radio" name="correct_${optionCount}" value="${optionCount}">
+                    </div>
+                    <input type="text" class="form-control option-text" required>
+                    <button type="button" class="btn btn-danger remove-option">Remove</button>
+                </div>
+            `;
+            
+            optionsContainer.appendChild(newOption);
+        });
+    });
+    
+    // Remove option button functionality
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-option')) {
+            e.target.closest('.option-row').remove();
+        }
+    });
+    
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const quizData = {
+            title: document.getElementById('title').value,
+            duration: parseInt(document.getElementById('duration').value),
+            questions: []
+        };
+        
+        // Collect questions data
+        document.querySelectorAll('.question-card').forEach((card, qIndex) => {
+            const question = {
+                id: qIndex + 1,
+                question: card.querySelector('.question-text').value,
+                options: [],
+                correct_answer: ''
+            };
+            
+            // Collect options
+            card.querySelectorAll('.option-row').forEach((row, oIndex) => {
+                const optionText = row.querySelector('.option-text').value;
+                question.options.push(optionText);
+                
+                // Check if this is the correct answer
+                if (row.querySelector('input[type="radio"]').checked) {
+                    question.correct_answer = optionText;
+                }
+            });
+            
+            quizData.questions.push(question);
+        });
+        
+        // Send the data to the server
+        fetch('/admin/edit_quiz/{{ quiz.id }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(quizData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                alert('Quiz updated successfully!');
+                window.location.href = "{{ url_for('dashboard') }}";
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating quiz');
+        });
+    });
+});
+</script>
+{% endblock %} 

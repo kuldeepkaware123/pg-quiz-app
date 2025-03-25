@@ -1,0 +1,352 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard - Connect Shiksha Quiz App{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#dashboard" data-bs-toggle="tab">
+                            <i class="fas fa-home"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#available-quizzes" data-bs-toggle="tab">
+                            <i class="fas fa-question-circle"></i> Available Quizzes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#my-results" data-bs-toggle="tab">
+                            <i class="fas fa-chart-line"></i> My Results
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#profile" data-bs-toggle="tab">
+                            <i class="fas fa-user"></i> Profile
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="tab-content">
+                <!-- Dashboard Tab -->
+                <div class="tab-pane fade {% if active_tab == 'dashboard' %}show active{% endif %}" id="dashboard">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Welcome, {{ current_user.username }}!</h1>
+                    </div>
+                    
+                    <!-- Stats Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Available Quizzes</h5>
+                                    <h2 class="card-text">{{ quizzes|length }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Completed Quizzes</h5>
+                                    <h2 class="card-text">{{ results|length }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Average Score</h5>
+                                    <h2 class="card-text">
+                                        {% if results %}
+                                            {{ "%.1f"|format(results|map(attribute='score')|sum / results|length) }}%
+                                        {% else %}
+                                            0%
+                                        {% endif %}
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Recent Quiz Attempts</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Quiz</th>
+                                                    <th>Score</th>
+                                                    <th>Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for result in results[:5] %}
+                                                <tr>
+                                                    <td>{{ result.quiz.title }}</td>
+                                                    <td>
+                                                        <span class="badge bg-{{ 'success' if result.score >= 60 else 'danger' }}">
+                                                            {{ "%.1f"|format(result.score) }}%
+                                                        </span>
+                                                    </td>
+                                                    <td>{{ result.completed_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Available Quizzes</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Quiz</th>
+                                                    <th>Category</th>
+                                                    <th>Duration</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for quiz in quizzes %}
+                                                {% if quiz.id not in attempted_quizzes %}
+                                                <tr>
+                                                    <td>{{ quiz.title }}</td>
+                                                    <td>{{ quiz.category.name if quiz.category else 'Uncategorized' }}</td>
+                                                    <td>{{ quiz.duration }} min</td>
+                                                    <td>
+                                                        <a href="{{ url_for('take_quiz', quiz_id=quiz.id) }}" class="btn btn-sm btn-primary">
+                                                            <i class="fas fa-play"></i> Start
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                                {% endif %}
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Available Quizzes Tab -->
+                <div class="tab-pane fade {% if active_tab == 'available-quizzes' %}show active{% endif %}" id="available-quizzes">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Available Quizzes</h1>
+                    </div>
+                    <div class="row">
+                        {% for quiz in quizzes %}
+                        {% if quiz.id not in attempted_quizzes %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ quiz.title }}</h5>
+                                    <p class="card-text">{{ quiz.description }}</p>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-folder me-2"></i>{{ quiz.category.name if quiz.category else 'Uncategorized' }}</li>
+                                        <li><i class="fas fa-clock me-2"></i>{{ quiz.duration }} minutes</li>
+                                        <li><i class="fas fa-question-circle me-2"></i>{{ quiz.questions|length }} questions</li>
+                                        <li><i class="fas fa-percentage me-2"></i>Passing Score: {{ quiz.passing_percentage }}%</li>
+                                    </ul>
+                                    <a href="{{ url_for('take_quiz', quiz_id=quiz.id) }}" class="btn btn-primary w-100">
+                                        <i class="fas fa-play me-2"></i>Start Quiz
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% if not quizzes or attempted_quizzes|length == quizzes|length %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>No new quizzes available at the moment.
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- My Results Tab -->
+                <div class="tab-pane fade {% if active_tab == 'my-results' %}show active{% endif %}" id="my-results">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">My Results</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-primary" onclick="exportResults('pdf')">
+                                <i class="fas fa-file-pdf"></i> Export PDF
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Quiz</th>
+                                            <th>Category</th>
+                                            <th>Score</th>
+                                            <th>Time Taken</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for result in results %}
+                                        <tr>
+                                            <td>{{ result.quiz.title }}</td>
+                                            <td>{{ result.quiz.category.name if result.quiz.category else 'Uncategorized' }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ 'success' if result.score >= 60 else 'danger' }}">
+                                                    {{ "%.1f"|format(result.score) }}%
+                                                </span>
+                                            </td>
+                                            <td>{{ result.time_taken }}s</td>
+                                            <td>{{ result.completed_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ 'success' if result.score >= 60 else 'danger' }}">
+                                                    {{ 'Passed' if result.score >= 60 else 'Failed' }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Tab -->
+                <div class="tab-pane fade {% if active_tab == 'profile' %}show active{% endif %}" id="profile">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">My Profile</h1>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                            <i class="fas fa-edit"></i> Edit Profile
+                        </button>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card mb-4">
+                                <div class="card-body text-center">
+                                    <img src="https://via.placeholder.com/150" class="rounded-circle mb-3" alt="Profile Picture">
+                                    <h4>{{ current_user.username }}</h4>
+                                    <p class="text-muted">{{ current_user.email }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Account Information</h5>
+                                    <table class="table">
+                                        <tr>
+                                            <th>Username:</th>
+                                            <td>{{ current_user.username }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Email:</th>
+                                            <td>{{ current_user.email }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Member Since:</th>
+                                            <td>{{ current_user.created_at.strftime('%Y-%m-%d') }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Last Login:</th>
+                                            <td>{{ current_user.last_login.strftime('%Y-%m-%d %H:%M') if current_user.last_login else 'Never' }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editProfileForm">
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-control" name="username" value="{{ current_user.username }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email" value="{{ current_user.email }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Current Password</label>
+                        <input type="password" class="form-control" name="current_password">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">New Password</label>
+                        <input type="password" class="form-control" name="new_password">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="updateProfile()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateProfile() {
+    const form = document.getElementById('editProfileForm');
+    const formData = new FormData(form);
+    
+    fetch('/update_profile', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            alert('Profile updated successfully!');
+            location.reload();
+        } else {
+            alert(data.error || 'Error updating profile');
+        }
+    });
+}
+
+function exportResults(format) {
+    window.location.href = `/export_results/${format}`;
+}
+</script>
+{% endblock %} 

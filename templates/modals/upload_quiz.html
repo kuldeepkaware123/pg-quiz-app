@@ -1,0 +1,86 @@
+<!-- Upload Quiz Modal -->
+<div class="modal fade" id="uploadQuizModal" tabindex="-1" aria-labelledby="uploadQuizModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadQuizModalLabel">Upload Quiz</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="uploadQuizForm">
+                    <div class="mb-3">
+                        <label for="quizFile" class="form-label">Quiz JSON File</label>
+                        <input type="file" class="form-control" id="quizFile" name="quiz_file" accept=".json" required>
+                        <div class="form-text">Upload a JSON file containing quiz data. <a href="#" onclick="downloadSampleQuiz()">Download sample format</a></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="uploadQuiz()">Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function uploadQuiz() {
+    const form = document.getElementById('uploadQuizForm');
+    const formData = new FormData(form);
+    
+    fetch('/admin/upload_quiz', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+        alert('Quiz uploaded successfully!');
+        location.reload();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error uploading quiz. Please try again.');
+    });
+}
+
+function downloadSampleQuiz() {
+    const sampleQuiz = {
+        "title": "Sample Quiz",
+        "description": "This is a sample quiz",
+        "duration": 30,
+        "category_id": 1,
+        "difficulty": "medium",
+        "passing_percentage": 60.0,
+        "max_attempts": 1,
+        "questions": [
+            {
+                "question_text": "What is 2 + 2?",
+                "question_type": "multiple_choice",
+                "points": 1,
+                "negative_marking": 0.0,
+                "explanation": "Basic arithmetic",
+                "options": [
+                    {"text": "3", "is_correct": false},
+                    {"text": "4", "is_correct": true},
+                    {"text": "5", "is_correct": false},
+                    {"text": "6", "is_correct": false}
+                ]
+            }
+        ]
+    };
+    
+    const blob = new Blob([JSON.stringify(sampleQuiz, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'sample_quiz.json';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+}
+</script> 

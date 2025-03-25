@@ -1,0 +1,153 @@
+<!-- Create Question Modal -->
+<div class="modal fade" id="createQuestionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Question</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createQuestionForm">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Question Type</label>
+                            <select class="form-select" name="question_type" required onchange="updateQuestionOptions(this)">
+                                <option value="multiple_choice">Multiple Choice</option>
+                                <option value="true_false">True/False</option>
+                                <option value="short_answer">Short Answer</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Quiz</label>
+                            <select class="form-select" name="quiz_id" required>
+                                <option value="">Select Quiz</option>
+                                {% for quiz in quizzes %}
+                                <option value="{{ quiz.id }}">{{ quiz.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Question Text</label>
+                        <textarea class="form-control" name="question_text" required rows="3"></textarea>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Points</label>
+                            <input type="number" class="form-control" name="points" value="1" min="1">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Negative Marking</label>
+                            <input type="number" class="form-control" name="negative_marking" value="0" min="0" step="0.1">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Explanation (shown after answering)</label>
+                        <textarea class="form-control" name="explanation" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Options</label>
+                        <div id="optionsContainer">
+                            <!-- Options will be added here based on question type -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveQuestion()">Save Question</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateQuestionOptions(select) {
+    const container = document.getElementById('optionsContainer');
+    const type = select.value;
+    
+    container.innerHTML = '';
+    
+    if (type === 'multiple_choice') {
+        for (let i = 0; i < 4; i++) {
+            container.innerHTML += `
+                <div class="mb-2">
+                    <div class="input-group">
+                        <div class="input-group-text">
+                            <input type="radio" name="correct_option" value="${i}" required>
+                        </div>
+                        <input type="text" class="form-control" name="option_${i}" placeholder="Option ${i + 1}" required>
+                    </div>
+                </div>
+            `;
+        }
+    } else if (type === 'true_false') {
+        container.innerHTML = `
+            <div class="mb-2">
+                <div class="input-group">
+                    <div class="input-group-text">
+                        <input type="radio" name="correct_option" value="true" required>
+                    </div>
+                    <input type="text" class="form-control" name="option_true" value="True" readonly>
+                </div>
+            </div>
+            <div class="mb-2">
+                <div class="input-group">
+                    <div class="input-group-text">
+                        <input type="radio" name="correct_option" value="false" required>
+                    </div>
+                    <input type="text" class="form-control" name="option_false" value="False" readonly>
+                </div>
+            </div>
+        `;
+    } else {
+        container.innerHTML = `
+            <div class="mb-2">
+                <input type="text" class="form-control" name="correct_answer" placeholder="Correct Answer" required>
+            </div>
+        `;
+    }
+}
+
+function saveQuestion() {
+    const form = document.getElementById('createQuestionForm');
+    const formData = new FormData(form);
+    const questionType = formData.get('question_type');
+    const options = [];
+    
+    if (questionType === 'multiple_choice') {
+        for (let i = 0; i < 4; i++) {
+            options.push({
+                text: formData.get(`option_${i}`),
+                is_correct: formData.get('correct_option') === i.toString()
+            });
+        }
+    } else if (questionType === 'true_false') {
+        options.push(
+            { text: 'True', is_correct: formData.get('correct_option') === 'true' },
+            { text: 'False', is_correct: formData.get('correct_option') === 'false' }
+        );
+    } else {
+        formData.append('correct_answer', formData.get('correct_answer'));
+    }
+    
+    formData.append('options', JSON.stringify(options));
+    
+    fetch('/admin/create_question', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || 'Error creating question');
+        }
+    })
+    .catch(error => {
+        alert('Error creating question');
+        console.error(error);
+    });
+}
+</script> 

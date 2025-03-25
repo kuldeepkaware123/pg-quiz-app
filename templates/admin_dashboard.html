@@ -1,0 +1,741 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Connect Shiksha Quiz App{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#dashboard" data-bs-toggle="tab">
+                            <i class="fas fa-home"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#quizzes" data-bs-toggle="tab">
+                            <i class="fas fa-question-circle"></i> Quizzes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#categories" data-bs-toggle="tab">
+                            <i class="fas fa-folder"></i> Categories
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#questions" data-bs-toggle="tab">
+                            <i class="fas fa-list"></i> Questions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#users" data-bs-toggle="tab">
+                            <i class="fas fa-users"></i> Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#reports" data-bs-toggle="tab">
+                            <i class="fas fa-chart-bar"></i> Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#settings" data-bs-toggle="tab">
+                            <i class="fas fa-cog"></i> Settings
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="tab-content">
+                <!-- Dashboard Tab -->
+                <div class="tab-pane fade {% if active_tab == 'dashboard' %}show active{% endif %}" id="dashboard">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Dashboard Overview</h1>
+                    </div>
+                    
+                    <!-- Stats Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Total Quizzes</h5>
+                                    <h2 class="card-text">{{ quizzes|length }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Active Users</h5>
+                                    <h2 class="card-text">{{ users|length }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Total Attempts</h5>
+                                    <h2 class="card-text">{{ attempts|length }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Avg. Score</h5>
+                                    <h2 class="card-text">{{ "%.1f"|format(avg_score) }}%</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Quick Actions</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <button class="btn btn-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#createQuizModal">
+                                                <i class="fas fa-plus"></i> Create New Quiz
+                                            </button>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <button class="btn btn-success w-100 mb-2" data-bs-toggle="modal" data-bs-target="#uploadQuizModal">
+                                                <i class="fas fa-upload"></i> Upload Quiz
+                                            </button>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <button class="btn btn-info w-100 mb-2" data-bs-toggle="modal" data-bs-target="#createCategoryModal">
+                                                <i class="fas fa-folder-plus"></i> Add Category
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Recent Quiz Attempts</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>User</th>
+                                                    <th>Quiz</th>
+                                                    <th>Score</th>
+                                                    <th>Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for attempt in recent_attempts %}
+                                                <tr>
+                                                    <td>{{ attempt.user.username }}</td>
+                                                    <td>{{ attempt.quiz.title }}</td>
+                                                    <td>{{ "%.1f"|format(attempt.score) }}%</td>
+                                                    <td>{{ attempt.completed_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Popular Quizzes</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Quiz</th>
+                                                    <th>Attempts</th>
+                                                    <th>Avg. Score</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for quiz in popular_quizzes %}
+                                                <tr>
+                                                    <td>{{ quiz.title }}</td>
+                                                    <td>{{ quiz.results|length }}</td>
+                                                    <td>
+                                                        {% set total_score = quiz.results|map(attribute='score')|sum %}
+                                                        {% set avg = total_score / quiz.results|length if quiz.results else 0 %}
+                                                        {{ "%.1f"|format(avg) }}%
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quizzes Tab -->
+                <div class="tab-pane fade {% if active_tab == 'quizzes' %}show active{% endif %}" id="quizzes">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Manage Quizzes</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#createQuizModal">
+                                <i class="fas fa-plus"></i> Create Quiz
+                            </button>
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#uploadQuizModal">
+                                <i class="fas fa-upload"></i> Upload Quiz
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Category</th>
+                                            <th>Duration</th>
+                                            <th>Questions</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for quiz in quizzes %}
+                                        <tr>
+                                            <td>{{ quiz.title }}</td>
+                                            <td>{{ quiz.category.name if quiz.category else 'Uncategorized' }}</td>
+                                            <td>{{ quiz.duration }} min</td>
+                                            <td>{{ quiz.questions|length }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ 'success' if quiz.is_active else 'danger' }}">
+                                                    {{ 'Active' if quiz.is_active else 'Inactive' }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <a href="{{ url_for('edit_quiz', quiz_id=quiz.id) }}" class="btn btn-sm btn-primary" title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-sm btn-info" onclick="previewQuiz({{ quiz.id }})" title="Preview">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-danger" onclick="deleteQuiz({{ quiz.id }})" title="Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Categories Tab -->
+                <div class="tab-pane fade {% if active_tab == 'categories' %}show active{% endif %}" id="categories">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Manage Categories</h1>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCategoryModal">
+                            <i class="fas fa-plus"></i> Add Category
+                        </button>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="card-title mb-0">Categories</h5>
+                                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createCategoryModal">
+                                    <i class="fas fa-plus"></i> Add Category
+                                </button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Description</th>
+                                            <th>Quizzes</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for category in categories %}
+                                        <tr>
+                                            <td>{{ category.name }}</td>
+                                            <td>{{ category.description }}</td>
+                                            <td>{{ category.quizzes|length }}</td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-sm btn-primary" onclick="editCategory({{ category.id }})">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-danger" onclick="deleteCategory({{ category.id }})">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Questions Tab -->
+                <div class="tab-pane fade {% if active_tab == 'questions' %}show active{% endif %}" id="questions">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Manage Questions</h1>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createQuestionModal">
+                            <i class="fas fa-plus"></i> Add Question
+                        </button>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Question</th>
+                                            <th>Type</th>
+                                            <th>Quiz</th>
+                                            <th>Points</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for question in questions %}
+                                        <tr>
+                                            <td>{{ question.question_text }}</td>
+                                            <td>{{ question.question_type }}</td>
+                                            <td>{{ question.quiz.title }}</td>
+                                            <td>{{ question.points }}</td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-sm btn-primary" onclick="editQuestion({{ question.id }})">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-danger" onclick="deleteQuestion({{ question.id }})">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Tab -->
+                <div class="tab-pane fade {% if active_tab == 'users' %}show active{% endif %}" id="users">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Manage Users</h1>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createUserModal">
+                            <i class="fas fa-plus"></i> Add User
+                        </button>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Username</th>
+                                            <th>Email</th>
+                                            <th>Role</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for user in users %}
+                                        <tr>
+                                            <td>{{ user.username }}</td>
+                                            <td>{{ user.email }}</td>
+                                            <td>{{ 'Admin' if user.is_admin else 'Student' }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ 'success' if user.is_active else 'danger' }}">
+                                                    {{ 'Active' if user.is_active else 'Inactive' }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-sm btn-primary" onclick="editUser({{ user.id }})">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-danger" onclick="deleteUser({{ user.id }})">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reports Tab -->
+                <div class="tab-pane fade {% if active_tab == 'reports' %}show active{% endif %}" id="reports">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Reports & Analytics</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-primary me-2" onclick="exportReport('pdf')">
+                                <i class="fas fa-file-pdf"></i> Export PDF
+                            </button>
+                            <button type="button" class="btn btn-success" onclick="exportReport('excel')">
+                                <i class="fas fa-file-excel"></i> Export Excel
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Performance Overview</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="performanceChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Category Distribution</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="categoryChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Tab -->
+                <div class="tab-pane fade {% if active_tab == 'settings' %}show active{% endif %}" id="settings">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Settings</h1>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <form id="settingsForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Site Name</label>
+                                    <input type="text" class="form-control" name="site_name" value="{{ settings.site_name }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Default Quiz Duration (minutes)</label>
+                                    <input type="number" class="form-control" name="default_duration" value="{{ settings.default_duration }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Default Passing Percentage</label>
+                                    <input type="number" class="form-control" name="default_passing_percentage" value="{{ settings.default_passing_percentage }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Maximum Quiz Attempts</label>
+                                    <input type="number" class="form-control" name="max_attempts" value="{{ settings.max_attempts }}">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Settings</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Tab -->
+                <div class="tab-pane fade {% if active_tab == 'profile' %}show active{% endif %}" id="profile">
+                    <!-- Profile content -->
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Include all modals -->
+{% include 'modals/create_quiz.html' %}
+{% include 'modals/upload_quiz.html' %}
+{% include 'modals/create_category.html' %}
+{% include 'modals/create_question.html' %}
+{% include 'modals/create_user.html' %}
+
+<!-- Create Category Modal -->
+<div class="modal fade" id="createCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createCategoryForm">
+                    <div class="mb-3">
+                        <label class="form-label">Category Name</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveCategory()">Save Category</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Initialize charts
+document.addEventListener('DOMContentLoaded', function() {
+    // Performance Chart
+    const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+    new Chart(performanceCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+                label: 'Average Score',
+                data: [65, 70, 75, 72, 78, 80],
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+
+    // Category Distribution Chart
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Programming', 'Mathematics', 'Science', 'History'],
+            datasets: [{
+                data: [30, 25, 20, 25],
+                backgroundColor: [
+                    'rgb(255, 99, 132)',
+                    'rgb(54, 162, 235)',
+                    'rgb(255, 205, 86)',
+                    'rgb(75, 192, 192)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+});
+
+// Quiz management functions
+function uploadQuiz() {
+    const form = document.getElementById('uploadQuizForm');
+    const formData = new FormData(form);
+    
+    fetch('/admin/upload_quiz', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+        alert('Quiz uploaded successfully!');
+        location.reload();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error uploading quiz. Please try again.');
+    });
+}
+
+function deleteQuiz(quizId) {
+    if (confirm('Are you sure you want to delete this quiz?')) {
+        fetch(`/admin/delete_quiz/${quizId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                location.reload();
+            } else {
+                alert('Error deleting quiz');
+            }
+        });
+    }
+}
+
+function previewQuiz(quizId) {
+    window.location.href = `/quiz/${quizId}`;
+}
+
+// Category management functions
+function editCategory(categoryId) {
+    // Implement category editing
+}
+
+function deleteCategory(categoryId) {
+    if (confirm('Are you sure you want to delete this category?')) {
+        fetch(`/admin/delete_category/${categoryId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                location.reload();
+            } else {
+                alert('Error deleting category');
+            }
+        });
+    }
+}
+
+// Question management functions
+function editQuestion(questionId) {
+    // Implement question editing
+}
+
+function deleteQuestion(questionId) {
+    if (confirm('Are you sure you want to delete this question?')) {
+        fetch(`/admin/delete_question/${questionId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                location.reload();
+            } else {
+                alert('Error deleting question');
+            }
+        });
+    }
+}
+
+// User management functions
+function editUser(userId) {
+    // Implement user editing
+}
+
+function deleteUser(userId) {
+    if (confirm('Are you sure you want to delete this user?')) {
+        fetch(`/admin/delete_user/${userId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                location.reload();
+            } else {
+                alert('Error deleting user');
+            }
+        });
+    }
+}
+
+// Report functions
+function exportReport(format) {
+    window.location.href = `/admin/export_report/${format}`;
+}
+
+// Settings form submission
+document.getElementById('settingsForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    
+    fetch('/admin/update_settings', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            alert('Settings updated successfully!');
+        } else {
+            alert('Error updating settings');
+        }
+    });
+});
+
+function saveCategory() {
+    const form = document.getElementById('createCategoryForm');
+    const formData = new FormData(form);
+    const categoryData = {
+        name: formData.get('name'),
+        description: formData.get('description')
+    };
+
+    fetch('/admin/create_category', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(categoryData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'Error creating category');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error creating category');
+    });
+}
+</script>
+{% endblock %} 

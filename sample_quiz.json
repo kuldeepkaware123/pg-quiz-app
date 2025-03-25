@@ -1,0 +1,53 @@
+{
+    "title": "Python Basics Quiz",
+    "description": "Test your knowledge of Python programming basics",
+    "duration": 30,
+    "category_id": 1,
+    "difficulty": "medium",
+    "passing_percentage": 60.0,
+    "max_attempts": 1,
+    "questions": [
+        {
+            "question_text": "What is Python?",
+            "question_type": "multiple_choice",
+            "points": 1,
+            "negative_marking": 0.0,
+            "explanation": "Python is a high-level, interpreted programming language",
+            "options": [
+                {"text": "A programming language", "is_correct": true},
+                {"text": "A database", "is_correct": false},
+                {"text": "An operating system", "is_correct": false},
+                {"text": "A web browser", "is_correct": false}
+            ]
+        },
+        {
+            "question_text": "Is Python case-sensitive?",
+            "question_type": "true_false",
+            "points": 1,
+            "negative_marking": 0.0,
+            "explanation": "Python is case-sensitive, meaning 'variable' and 'Variable' are different",
+            "correct_answer": "true"
+        },
+        {
+            "question_text": "What is the correct way to create a list in Python?",
+            "question_type": "multiple_choice",
+            "points": 1,
+            "negative_marking": 0.0,
+            "explanation": "Lists in Python are created using square brackets",
+            "options": [
+                {"text": "[]", "is_correct": true},
+                {"text": "()", "is_correct": false},
+                {"text": "{}", "is_correct": false},
+                {"text": "<>", "is_correct": false}
+            ]
+        },
+        {
+            "question_text": "What is the output of print(2 + 2)?",
+            "question_type": "short_answer",
+            "points": 1,
+            "negative_marking": 0.0,
+            "explanation": "The print function outputs the result of the arithmetic operation",
+            "correct_answer": "4"
+        }
+    ]
+} 

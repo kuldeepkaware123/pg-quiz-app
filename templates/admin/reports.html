@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Connect Shiksha Quiz App{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4"><i class="fas fa-chart-bar"></i> Reports & Analytics</h2>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Users</h5>
+                    <h2 class="card-text">{{ total_users }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Quizzes</h5>
+                    <h2 class="card-text">{{ total_quizzes }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Attempts</h5>
+                    <h2 class="card-text">{{ total_attempts }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Quiz Performance</h5>
+                    {% if quiz_stats %}
+                    <canvas id="quizPerformanceChart"></canvas>
+                    {% else %}
+                    <p class="text-muted">No quiz attempts yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Category Distribution</h5>
+                    {% if categories %}
+                    <canvas id="categoryDistributionChart"></canvas>
+                    {% else %}
+                    <p class="text-muted">No categories available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Recent Quiz Attempts</h5>
+            {% if recent_attempts %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Quiz</th>
+                            <th>Score</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for attempt in recent_attempts %}
+                        <tr>
+                            <td>{{ attempt.user.username }}</td>
+                            <td>{{ attempt.quiz.title }}</td>
+                            <td>{{ "%.1f"|format(attempt.score) }}%</td>
+                            <td>{{ attempt.completed_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No recent quiz attempts.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+{% if quiz_stats %}
+// Quiz Performance Chart
+const quizPerformanceCtx = document.getElementById('quizPerformanceChart').getContext('2d');
+const quizPerformanceChart = new Chart(quizPerformanceCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ quiz_stats|map(attribute='title')|list|tojson }},
+        datasets: [{
+            label: 'Average Score (%)',
+            data: {{ quiz_stats|map(attribute='avg_score')|list|tojson }},
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100
+            }
+        }
+    }
+});
+{% endif %}
+
+{% if categories %}
+// Category Distribution Chart
+const categoryDistributionCtx = document.getElementById('categoryDistributionChart').getContext('2d');
+const categoryDistributionChart = new Chart(categoryDistributionCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ categories|map(attribute='name')|list|tojson }},
+        datasets: [{
+            data: {{ categories|map(attribute='quiz_count')|list|tojson }},
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.5)',
+                'rgba(54, 162, 235, 0.5)',
+                'rgba(255, 206, 86, 0.5)',
+                'rgba(75, 192, 192, 0.5)',
+                'rgba(153, 102, 255, 0.5)'
+            ],
+            borderColor: [
+                'rgba(255, 99, 132, 1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 206, 86, 1)',
+                'rgba(75, 192, 192, 1)',
+                'rgba(153, 102, 255, 1)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true
+    }
+});
+{% endif %}
+</script>
+{% endblock %} 

@@ -1,0 +1,221 @@
+<!-- Create Quiz Modal -->
+<div class="modal fade" id="createQuizModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Quiz</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createQuizForm">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Quiz Title</label>
+                            <input type="text" class="form-control" name="title" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" name="category_id" required>
+                                <option value="">Select Category</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Duration (minutes)</label>
+                            <input type="number" class="form-control" name="duration" required min="1">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Difficulty</label>
+                            <select class="form-select" name="difficulty" required>
+                                <option value="easy">Easy</option>
+                                <option value="medium">Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Passing Percentage</label>
+                            <input type="number" class="form-control" name="passing_percentage" required min="0" max="100" value="60">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Maximum Attempts</label>
+                            <input type="number" class="form-control" name="max_attempts" required min="1" value="1">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Questions</label>
+                        <div id="questionsContainer">
+                            <!-- Questions will be added here dynamically -->
+                        </div>
+                        <button type="button" class="btn btn-outline-primary mt-2" onclick="addQuestion()">
+                            <i class="fas fa-plus me-2"></i>Add Question
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveQuiz()">Save Quiz</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function addQuestion() {
+    const container = document.getElementById('questionsContainer');
+    const questionIndex = container.children.length;
+    
+    const questionDiv = document.createElement('div');
+    questionDiv.className = 'card mb-3';
+    questionDiv.innerHTML = `
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="card-title mb-0">Question ${questionIndex + 1}</h6>
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeQuestion(this)">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Question Type</label>
+                <select class="form-select question-type" onchange="updateQuestionOptions(this)">
+                    <option value="multiple_choice">Multiple Choice</option>
+                    <option value="true_false">True/False</option>
+                    <option value="short_answer">Short Answer</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Question Text</label>
+                <textarea class="form-control question-text" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Points</label>
+                <input type="number" class="form-control question-points" value="1" min="1">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Negative Marking</label>
+                <input type="number" class="form-control question-negative" value="0" min="0" step="0.1">
+            </div>
+            <div class="options-container">
+                <!-- Options will be added here based on question type -->
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(questionDiv);
+    updateQuestionOptions(questionDiv.querySelector('.question-type'));
+}
+
+function updateQuestionOptions(select) {
+    const container = select.closest('.card-body').querySelector('.options-container');
+    const type = select.value;
+    
+    container.innerHTML = '';
+    
+    if (type === 'multiple_choice') {
+        for (let i = 0; i < 4; i++) {
+            container.innerHTML += `
+                <div class="mb-2">
+                    <div class="input-group">
+                        <div class="input-group-text">
+                            <input type="radio" name="correct_${container.closest('.card').querySelector('.card-title').textContent.split(' ')[1]}" value="${i}" required>
+                        </div>
+                        <input type="text" class="form-control" placeholder="Option ${i + 1}" required>
+                    </div>
+                </div>
+            `;
+        }
+    } else if (type === 'true_false') {
+        container.innerHTML = `
+            <div class="mb-2">
+                <div class="input-group">
+                    <div class="input-group-text">
+                        <input type="radio" name="correct_${container.closest('.card').querySelector('.card-title').textContent.split(' ')[1]}" value="true" required>
+                    </div>
+                    <input type="text" class="form-control" value="True" readonly>
+                </div>
+            </div>
+            <div class="mb-2">
+                <div class="input-group">
+                    <div class="input-group-text">
+                        <input type="radio" name="correct_${container.closest('.card').querySelector('.card-title').textContent.split(' ')[1]}" value="false" required>
+                    </div>
+                    <input type="text" class="form-control" value="False" readonly>
+                </div>
+            </div>
+        `;
+    } else {
+        container.innerHTML = `
+            <div class="mb-2">
+                <input type="text" class="form-control" placeholder="Correct Answer" required>
+            </div>
+        `;
+    }
+}
+
+function removeQuestion(button) {
+    button.closest('.card').remove();
+}
+
+function saveQuiz() {
+    const form = document.getElementById('createQuizForm');
+    const formData = new FormData(form);
+    const questions = [];
+    
+    document.querySelectorAll('#questionsContainer .card').forEach((card, index) => {
+        const question = {
+            type: card.querySelector('.question-type').value,
+            text: card.querySelector('.question-text').value,
+            points: parseInt(card.querySelector('.question-points').value),
+            negative_marking: parseFloat(card.querySelector('.question-negative').value),
+            options: []
+        };
+        
+        if (question.type === 'multiple_choice') {
+            card.querySelectorAll('.options-container .input-group').forEach((group, i) => {
+                question.options.push({
+                    text: group.querySelector('input[type="text"]').value,
+                    is_correct: group.querySelector('input[type="radio"]').checked
+                });
+            });
+        } else if (question.type === 'true_false') {
+            question.options = [
+                { text: 'True', is_correct: card.querySelector('input[value="true"]').checked },
+                { text: 'False', is_correct: card.querySelector('input[value="false"]').checked }
+            ];
+        } else {
+            question.correct_answer = card.querySelector('.options-container input').value;
+        }
+        
+        questions.push(question);
+    });
+    
+    formData.append('questions', JSON.stringify(questions));
+    
+    fetch('/admin/create_quiz', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || 'Error creating quiz');
+        }
+    })
+    .catch(error => {
+        alert('Error creating quiz');
+        console.error(error);
+    });
+}
+</script> 
